@@ -1,4 +1,4 @@
-import CORS
+
 from flask import Blueprint, request, jsonify
 from models.user_model import User
 from utils.config import users_collection
