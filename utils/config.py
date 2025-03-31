@@ -1,10 +1,10 @@
 from pymongo import MongoClient
 import os
-
+from dotenv import load_dotenv
+load_dotenv()
 # MongoDB URI (Replace with the correct connection string)
 MONGO_URI = os.getenv(
-    "MONGO_URI",
-    "mongodb+srv://yuri561:Houbenove561$@homebase.5zmgu59.mongodb.net/casaprodb?retryWrites=true&w=majority&tls=true&tlsAllowInvalidCertificates=true"
+    "MONGODB_URI"
 )
 
 # Connect to MongoDB Atlas
