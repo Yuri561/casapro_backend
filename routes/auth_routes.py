@@ -2,7 +2,7 @@
 from flask import Blueprint, request, jsonify
 from models.user_model import User
 from utils.config import users_collection
-
+import logging
 
 auth_routes = Blueprint("auth_routes", __name__)
 
@@ -33,4 +33,5 @@ def login():
     if user_data and User.verify_password(user_data["password"], password):
         return jsonify({"message": "Login successful"}), 200
     else:
-        return jsonify({"error": "Invalid credentials"}), 401
+        logging.error(f"Error in login route: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
