@@ -1,15 +1,15 @@
 from flask import Flask, request
 from routes.auth_routes import auth_routes
+
 from flask_cors import CORS
-from flask_cors import CORS
+
 
 app = Flask(__name__)
-CORS(app)
 
-# # Correct CORS Configuration (Allow Multiple Origins)
-# CORS(app, resources={r"/*": {"origins": ["http://localhost:5173",
-#                                          "https://casapro-pink.vercel.app",
-#                                          "https://casapro-backend-o0k1.onrender.com"]}})
+# Correct CORS Configuration (Allow Multiple Origins)
+CORS(app, resources={r"/*": {"origins": ["http://localhost:5173",
+                                         "https://casapro-pink.vercel.app",
+                                         "https://casapro-backend-o0k1.onrender.com"]}})
 
 # Register Blueprints
 app.register_blueprint(auth_routes)
