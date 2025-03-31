@@ -1,31 +1,6 @@
 from flask import Flask, request, jsonify
 from routes.auth_routes import auth_routes
 from flask_cors import CORS
-from pymongo import MongoClient
-from dotenv import load_dotenv
-import os
-import logging
-
-# Load environment variables from .env
-load_dotenv()
-
-# ✅ Get MongoDB URI from .env
-MONGO_URI = os.getenv("MONGODB_URI")
-
-# ✅ Establish MongoDB Connection
-try:
-    client = MongoClient(MONGO_URI)
-    db = client["casaprodb"]
-    users_collection = db["users"]
-
-    # Print collections for confirmation
-    collections = db.list_collection_names()
-    print("✅ Connection Successful!")
-    print("Collections:", collections)
-
-except Exception as e:
-    print(f"❌ Error connecting to MongoDB: {e}")
-    exit(1)  # Exit the application if MongoDB fails
 
 # Initialize Flask app
 app = Flask(__name__)
