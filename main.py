@@ -14,15 +14,15 @@ CORS(app, resources={r"/*": {"origins": ["http://localhost:5173",
 # Register Blueprints
 app.register_blueprint(auth_routes)
 
-@app.before_request
-def handle_options():
-    if request.method == "OPTIONS":
-        response = app.make_default_options_response()
-        headers = response.headers
-        headers["Access-Control-Allow-Origin"] = "*"
-        headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS, PUT, DELETE"
-        return response
+# @app.before_request
+# def handle_options():
+#     if request.method == "OPTIONS":
+#         response = app.make_default_options_response()
+#         headers = response.headers
+#         headers["Access-Control-Allow-Origin"] = "*"
+#         headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+#         headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS, PUT, DELETE"
+#         return response
 
 @app.route("/")
 def home():
