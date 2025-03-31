@@ -1,3 +1,5 @@
+import traceback
+
 from flask import Blueprint, request, jsonify
 from models.user_model import User
 from utils.config import users_collection
@@ -6,7 +8,9 @@ import logging
 # Create Blueprint for auth routes
 auth_routes = Blueprint("auth_routes", __name__)
 
-# ✅ Register Route
+#logging.basicConfig(filename="error.log", level=logging.ERROR)
+
+
 @auth_routes.route("/register", methods=["POST"])
 def register():
     try:
@@ -25,12 +29,21 @@ def register():
         # Create and save new user
         user = User(username, password, email)
         user.save_to_db(users_collection)
-        return jsonify({"message": "User registered successfully"}), 201
+
+        # ✅ Add CORS Headers to Response
+        response = jsonify({"message": "User registered successfully"})
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        response.headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS, PUT, DELETE"
+
+        return response, 201
 
     except Exception as e:
-        logging.error(f"Error in register route: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
-
+        error_traceback = traceback.format_exc()
+        logging.error(f"Error in register route: {str(e)}\n{error_traceback}")
+        response = jsonify({"error": "Internal server error"})
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        return response, 500
 
 # ✅ Login Route
 @auth_routes.route("/login", methods=["POST"])
