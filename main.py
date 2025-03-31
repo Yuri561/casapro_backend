@@ -1,10 +1,11 @@
 from flask import Flask
 from routes.auth_routes import auth_routes
-# from utils.config import SECRET_KEY
-from flask import Flask
-from routes.auth_routes import auth_routes
+from flask_cors import CORS
 
 app = Flask(__name__)
+
+# Correct CORS Configuration (Allow Multiple Origins)
+CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "https://casapro-pink.vercel.app"]}})
 
 # Register Blueprints
 app.register_blueprint(auth_routes)
