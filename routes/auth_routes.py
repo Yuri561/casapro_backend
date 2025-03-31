@@ -1,4 +1,4 @@
-import traceback
+
 
 from flask import Blueprint, request, jsonify
 from models.user_model import User
@@ -39,8 +39,7 @@ def register():
         return response, 201
 
     except Exception as e:
-        error_traceback = traceback.format_exc()
-        logging.error(f"Error in register route: {str(e)}\n{error_traceback}")
+        logging.error(f"Error in register route: {str(e)}")
         response = jsonify({"error": "Internal server error"})
         response.headers["Access-Control-Allow-Origin"] = "*"
         return response, 500

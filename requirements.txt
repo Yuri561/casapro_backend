@@ -7,4 +7,3 @@ gunicorn
 CORS
 flask_cors
 logging
-traceback
