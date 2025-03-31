@@ -1,8 +1,12 @@
+import CORS
 from flask import Blueprint, request, jsonify
 from models.user_model import User
 from utils.config import users_collection
+from flask_cors import CORS
 
 auth_routes = Blueprint("auth_routes", __name__)
+
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173", "https://casapro-pink.vercel.app/"}})
 
 # Register Route
 @auth_routes.route("/register", methods=["POST"])
