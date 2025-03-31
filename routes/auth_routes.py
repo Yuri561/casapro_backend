@@ -13,13 +13,17 @@ def register():
         data = request.json
         username = data.get("username")
         password = data.get("password")
+        email = data.get("email")
+
+        if not username or not password or not email:
+            return jsonify({"error": "All fields are required"}), 400
 
         # Check if the user already exists
         if User.find_by_username(username, users_collection):
             return jsonify({"error": "Username already exists"}), 400
 
         # Create and save new user
-        user = User(username, password)
+        user = User(username, password, email)
         user.save_to_db(users_collection)
         return jsonify({"message": "User registered successfully"}), 201
 
