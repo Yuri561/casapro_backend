@@ -6,6 +6,7 @@ from utils.config import users_collection
 
 auth_routes = Blueprint("auth_routes", __name__)
 
+
 # Register Route
 @auth_routes.route("/register", methods=["POST"])
 def register():
