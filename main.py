@@ -1,8 +1,10 @@
 from flask import Flask, request
 from routes.auth_routes import auth_routes
 from flask_cors import CORS
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # # Correct CORS Configuration (Allow Multiple Origins)
 # CORS(app, resources={r"/*": {"origins": ["http://localhost:5173",
