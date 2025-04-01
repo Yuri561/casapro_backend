@@ -4,14 +4,15 @@ import os
 
 load_dotenv()
 MONGO_URI = os.getenv("MONGODB_URI")
-try:
 
+try:
     client = MongoClient(MONGO_URI)
     db = client["casaprodb"]
+    inventory_collection = db["inventory"]
 
-    collections = db.list_collection_names()
     print("✅ Connection Successful!")
-    print("Collections:", collections)
+    print("Collections:", db.list_collection_names())
+
 
 except Exception as e:
     print(f"Error: {e}")

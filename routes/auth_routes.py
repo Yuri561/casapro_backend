@@ -2,7 +2,9 @@
 
 from flask import Blueprint, request, jsonify
 from models.user_model import User
+from models.inventory import Inventory
 from utils.config import users_collection
+from utils.config import inventory_collection
 import logging
 
 # Create Blueprint for auth routes
@@ -30,7 +32,7 @@ def register():
         user = User(username, password, email)
         user.save_to_db(users_collection)
 
-        # ✅ Add CORS Headers to Response
+
         response = jsonify({"message": "User registered successfully"})
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
@@ -44,7 +46,7 @@ def register():
         response.headers["Access-Control-Allow-Origin"] = "*"
         return response, 500
 
-# ✅ Login Route
+
 @auth_routes.route("/login", methods=["POST"])
 def login():
     try:
@@ -69,4 +71,27 @@ def login():
 
     except Exception as e:
         logging.error(f"Error in login route: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@auth_routes.route("/inventory", methods=["POST"])
+def inventory():
+    try:
+        data = request.json
+        user_id = data.get("user_id")
+        user_inventory = list(inventory_collection.find({"user_id": user_id}))
+
+        for item in user_inventory:
+            item["_id"] = str(item["_id"])
+
+        if user_inventory:
+            return jsonify({
+                "message": "Inventory successfully loaded",
+                "user_inventory": user_inventory
+            }), 200
+        else:
+            return jsonify({"error": "No inventory found for this user"}), 404
+
+    except Exception as e:
+        logging.error(f"Error in inventory route: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500

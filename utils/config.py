@@ -15,3 +15,4 @@ db = client["casaprodb"]
 
 # Collections
 users_collection = db["users"]
+inventory_collection = db["inventory"]
