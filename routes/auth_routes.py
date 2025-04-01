@@ -6,6 +6,7 @@ from models.inventory import Inventory
 from utils.config import users_collection
 from utils.config import inventory_collection
 import logging
+from bson import ObjectId
 
 # Create Blueprint for auth routes
 auth_routes = Blueprint("auth_routes", __name__)
@@ -62,9 +63,9 @@ def login():
             return jsonify({
                 "message": "Login successful",
                 "user": {
-                    "username": user_data["username"]
-                    # you can also return email, id, etc. if needed
-                }
+                    "username": user_data["username"],
+                    "user_id": user_data["username"]
+                    }
             }), 200
         else:
             return jsonify({"error": "Invalid credentials"}), 401
@@ -72,8 +73,6 @@ def login():
     except Exception as e:
         logging.error(f"Error in login route: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
-
-
 @auth_routes.route("/inventory", methods=["POST"])
 def inventory():
     try:
@@ -81,6 +80,7 @@ def inventory():
         user_id = data.get("user_id")
         user_inventory = list(inventory_collection.find({"user_id": user_id}))
 
+        # ✅ Convert ObjectId to string
         for item in user_inventory:
             item["_id"] = str(item["_id"])
 
