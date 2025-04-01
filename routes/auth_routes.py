@@ -57,7 +57,13 @@ def login():
 
         # Verify user credentials
         if user_data and User.verify_password(user_data["password"], password):
-            return jsonify({"message": "Login successful"}), 200
+            return jsonify({
+                "message": "Login successful",
+                "user": {
+                    "username": user_data["username"]
+                    # you can also return email, id, etc. if needed
+                }
+            }), 200
         else:
             return jsonify({"error": "Invalid credentials"}), 401
 
