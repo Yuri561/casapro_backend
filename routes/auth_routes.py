@@ -6,7 +6,7 @@ from models.inventory import Inventory
 from utils.config import users_collection
 from utils.config import inventory_collection
 import logging
-from bson import ObjectId
+
 
 # Create Blueprint for auth routes
 auth_routes = Blueprint("auth_routes", __name__)
@@ -109,3 +109,16 @@ def update_inventory(item_id):
         return jsonify({"message": "Inventory updated successfully"}), 200
     else:
         return jsonify({"error": "Inventory item not found or no changes made"}), 404
+
+@auth_routes.route('/inventory/<user_id>', methods=['POST'])
+def add_inventory(user_id):
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    add_item = Inventory.insert_item(user_id, data, inventory_collection)
+    if add_item:
+        return jsonify({"message": "item successfully added successfully",
+                        "added_item": data}), 201
+    else:
+        return jsonify({"error": "Inventory item not added or no changes made"}), 404
