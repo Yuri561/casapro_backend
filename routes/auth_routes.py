@@ -73,6 +73,8 @@ def login():
     except Exception as e:
         logging.error(f"Error in login route: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
+
+
 @auth_routes.route("/inventory", methods=["POST"])
 def inventory():
     try:
@@ -95,3 +97,15 @@ def inventory():
     except Exception as e:
         logging.error(f"Error in inventory route: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
+
+@auth_routes.route('/inventory/<item_id>', methods=['PUT'])
+def update_inventory(item_id):
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    modified_count = Inventory.update_item(item_id, data, inventory_collection)
+    if modified_count:
+        return jsonify({"message": "Inventory updated successfully"}), 200
+    else:
+        return jsonify({"error": "Inventory item not found or no changes made"}), 404

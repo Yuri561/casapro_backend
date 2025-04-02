@@ -1,11 +1,15 @@
+from bson import ObjectId
+from utils.config import inventory_collection
+
 class Inventory:
-    def __init__(self, user_id, name, category, location, qty, price):
+    def __init__(self, user_id, name, category, location, quantity, price):
         self.user_id = user_id
         self.name = name
         self.category = category
         self.location = location
-        self.qty = qty
+        self.quantity = quantity
         self.price = price
+
 
     def save_to_db(self, inventory_collection):
         user_inv_data = {
@@ -13,7 +17,7 @@ class Inventory:
             "name": self.name,
             "category": self.category,
             "location": self.location,
-            "qty": self.qty,
+            "quantity": self.quantity,
             "price": self.price
         }
         inventory_collection.insert_one(user_inv_data)
@@ -22,3 +26,10 @@ class Inventory:
     def find_by_user(user_id, inventory_collection):
         return inventory_collection.find({"user_id": user_id})
 
+    @staticmethod
+    def update_item(item_id, updated_data, inventory_collection):
+        result = inventory_collection.update_one(
+            {"_id": ObjectId(item_id)},
+            {"$set": updated_data}
+        )
+        return result.modified_count
