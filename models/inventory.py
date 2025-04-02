@@ -33,3 +33,6 @@ class Inventory:
             {"$set": updated_data}
         )
         return result.modified_count
+    def delete_item(item_id, inventory_collection):
+        result = inventory_collection.delete_one({"_id": ObjectId(item_id)})
+        return result.deleted_count
