@@ -33,10 +33,3 @@ class Inventory:
             {"$set": updated_data}
         )
         return result.modified_count
-    @staticmethod
-    def insert_item(user_id, updated_item, inventory_collection):
-        result = inventory_collection.insert_one(
-            {"user_id": user_id, **updated_item},
-
-        )
-        return result
