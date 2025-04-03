@@ -10,7 +10,6 @@ class Inventory:
         self.quantity = quantity
         self.price = price
 
-
     def save_to_db(self, inventory_collection):
         user_inv_data = {
             "user_id": self.user_id,
@@ -20,7 +19,8 @@ class Inventory:
             "quantity": self.quantity,
             "price": self.price
         }
-        inventory_collection.insert_one(user_inv_data)
+        result = inventory_collection.insert_one(user_inv_data)
+        return str(result.inserted_id)
 
     @staticmethod
     def find_by_user(user_id, inventory_collection):
@@ -33,6 +33,14 @@ class Inventory:
             {"$set": updated_data}
         )
         return result.modified_count
+
+    @staticmethod
+    def insert_item(user_id, new_item, inventory_collection):
+        document = {"user_id": user_id, **new_item}
+        result = inventory_collection.insert_one(document)
+        return str(result.inserted_id)
+
+    @staticmethod
     def delete_item(item_id, inventory_collection):
         result = inventory_collection.delete_one({"_id": ObjectId(item_id)})
         return result.deleted_count

@@ -110,15 +110,23 @@ def update_inventory(item_id):
     else:
         return jsonify({"error": "Inventory item not found or no changes made"}), 404
 
-@auth_routes.route('/inventory/<user_id>', methods=['POST'])
-def add_inventory(user_id):
+@auth_routes.route('/inventory', methods=['POST'])
+def add_inventory():
     data = request.get_json()
     if not data:
         return jsonify({"error": "No data provided"}), 400
 
-    add_item = Inventory.insert_item(user_id, data, inventory_collection)
-    if add_item:
-        return jsonify({"message": "item successfully added successfully",
-                        "added_item": data}), 201
-    else:
-        return jsonify({"error": "Inventory item not added or no changes made"}), 404
+    try:
+        new_item = Inventory(
+            user_id = data.get("user_id"),
+            name = data.get("name"),
+            category=data.get("category"),
+            quantity= data.get("quantity"),
+            location= data.get("location"),
+            price= data.get("price")
+        )
+
+        insert_id = new_item.save_to_db(inventory_collection)
+        return jsonify({"message": "items added successfully", "item_id": insert_id})
+    except Exception as e:
+        return jsonify({"error": str(e)})
