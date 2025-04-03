@@ -110,7 +110,7 @@ def update_inventory(item_id):
     else:
         return jsonify({"error": "Inventory item not found or no changes made"}), 404
 
-@auth_routes.route('/inventory', methods=['POST'])
+@auth_routes.route('/inventory/add/<user_id>', methods=['POST'])
 def add_inventory():
     data = request.get_json()
     if not data:
