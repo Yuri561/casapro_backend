@@ -121,11 +121,23 @@ def add_inventory(user_id):
             user_id=user_id,
             name=data.get("name"),
             category=data.get("category"),
-            quantity=data.get("quantity"),
+            quantity= int(data.get("quantity")),
             location=data.get("location"),
             price=data.get("price")
         )
         insert_id = new_item.save_to_db(inventory_collection)
         return jsonify({"message": "Item added successfully", "item_id": insert_id}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@auth_routes.route('/inventory/delete/<item_id>', methods=['DELETE'])
+def delete_inventory(item_id):
+    try:
+        deleted_count = Inventory.delete_item(item_id, inventory_collection)
+        if deleted_count:
+            return jsonify({"message": "Item deleted successfully", "deleted_count": deleted_count}), 200
+        else:
+            return jsonify({"error": "Item not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500

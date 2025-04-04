@@ -2,7 +2,7 @@ from bson import ObjectId
 from utils.config import inventory_collection
 
 class Inventory:
-    def __init__(self, user_id, name, category, location, quantity, price):
+    def __init__(self,  user_id, name, category, location, quantity, price):
         self.user_id = user_id
         self.name = name
         self.category = category
