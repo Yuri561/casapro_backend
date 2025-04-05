@@ -1,6 +1,6 @@
 from bson import ObjectId
 from utils.config import inventory_collection
-import datetime
+from datetime import datetime
 
 class Inventory:
     def __init__(self,  user_id, name, category, location, quantity, price):
@@ -23,6 +23,17 @@ class Inventory:
         }
         result = inventory_collection.insert_one(user_inv_data)
         return str(result.inserted_id)
+
+    @staticmethod
+    def record_change(category, change_type, amount, user_id, history_collection):
+        history_collection.insert_one({
+            "user_id": user_id,
+            "category": category,
+            "changeType": change_type,  # "added", "removed", "lowStock"
+            "amount": amount,
+            "timestamp": datetime.now()
+        })
+
 
     @staticmethod
     def find_by_user(user_id, inventory_collection):

@@ -4,9 +4,9 @@ from flask import Blueprint, request, jsonify
 from models.user_model import User
 from models.inventory import Inventory
 from utils.config import users_collection
-from utils.config import inventory_collection
+from utils.config import inventory_collection, inventory_history_collection
 import logging
-
+from bson import ObjectId
 
 # Create Blueprint for auth routes
 auth_routes = Blueprint("auth_routes", __name__)
@@ -75,81 +75,74 @@ def login():
         return jsonify({"error": "Internal server error"}), 500
 
 
-@auth_routes.route("/inventory", methods=["POST"])
-def inventory():
-    try:
-        data = request.json
-        user_id = data.get("user_id")
-        user_inventory = list(inventory_collection.find({"user_id": user_id}))
-
-        # ✅ Convert ObjectId to string
-        for item in user_inventory:
-            item["_id"] = str(item["_id"])
-
-        if user_inventory:
-            return jsonify({
-                "message": "Inventory successfully loaded",
-                "user_inventory": user_inventory
-            }), 200
-        else:
-            return jsonify({"error": "No inventory found for this user"}), 404
-
-    except Exception as e:
-        logging.error(f"Error in inventory route: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
-
 @auth_routes.route('/inventory/<item_id>', methods=['PUT'])
 def update_inventory(item_id):
     data = request.get_json()
     if not data:
         return jsonify({"error": "No data provided"}), 400
 
-    modified_count = Inventory.update_item(item_id, data, inventory_collection)
-    if modified_count:
+    modified = Inventory.update_item(item_id, data, inventory_collection)
+    if modified:
+        # Record the change
+        Inventory.record_change(
+            category=data.get("category"),
+            change_type="updated",
+            amount=0,
+            user_id=data.get("user_id"),
+            history_collection=inventory_history_collection
+        )
         return jsonify({"message": "Inventory updated successfully"}), 200
-    else:
-        return jsonify({"error": "Inventory item not found or no changes made"}), 404
+
+    return jsonify({"error": "Item not found or no changes"}), 404
 
 @auth_routes.route('/inventory/add/<user_id>', methods=['POST'])
 def add_inventory(user_id):
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "No data provided"}), 400
-
+    data = request.get_json() or {}
     try:
         new_item = Inventory(
             user_id=user_id,
-            name=data.get("name"),
-            category=data.get("category"),
-            quantity= int(data.get("quantity")),
-            location=data.get("location"),
-            price=data.get("price")
+            name=data["name"],
+            category=data["category"],
+            quantity=int(data["quantity"]),
+            location=data["location"],
+            price=float(data["price"])
         )
-        insert_id = new_item.save_to_db(inventory_collection)
-        return jsonify({"message": "Item added successfully", "item_id": insert_id}), 201
+        inserted_id = new_item.save_to_db(inventory_collection)
+
+        Inventory.record_change(
+            category=new_item.category,
+            change_type="added",
+            amount=new_item.quantity,
+            user_id=user_id,
+            history_collection=inventory_history_collection
+        )
+
+        return jsonify({"message": "Item added successfully", "item_id": inserted_id}), 201
+    except KeyError:
+        return jsonify({"error": "Missing fields"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-@auth_routes.route('/inventory/delete/<item_id>/<decrement>', methods=['PATCH'])
+@auth_routes.route('/inventory/update-quantity/<item_id>/<int:decrement>', methods=['PATCH'])
 def update_quantity(item_id, decrement):
-    try:
-        modified_count = Inventory.updated_quantities(item_id, inventory_collection, int(decrement))
-        if modified_count:
-            return jsonify({"message": "Item updated successfully", "modified_count": modified_count}), 200
-        else:
-            return jsonify({"error": "Item not found"}), 404
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    modified = Inventory.updated_quantities(item_id, decrement, inventory_collection)
+    if modified:
+        # Fetch the item to get its category & user_id
+        doc = inventory_collection.find_one({"_id": ObjectId(item_id)})
+        Inventory.record_change(
+            category=doc["category"],
+            change_type="removed",
+            amount=decrement,
+            user_id=doc["user_id"],
+            history_collection=inventory_history_collection
+        )
+        return jsonify({"message": "Quantity updated", "modified_count": modified}), 200
 
-@auth_routes.route('/inventory/delete/<item_id>', methods=['Delete'])
+    return jsonify({"error": "Item not found"}), 404
+
+@auth_routes.route('/inventory/delete/<item_id>', methods=['DELETE'])
 def delete_inventory(item_id):
-    try:
-        modified_count = Inventory.delete_item(item_id, inventory_collection)
-        if modified_count:
-            return jsonify({"message": "Item updated successfully", "modified_count": modified_count}), 200
-        else:
-            return jsonify({"error": "Item not found"}), 404
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
+    deleted = Inventory.delete_item(item_id, inventory_collection)
+    if deleted:
+        return jsonify({"message": "Item deleted successfully", "deleted_count": deleted}), 200
+    return jsonify({"error": "Item not found"}), 404
