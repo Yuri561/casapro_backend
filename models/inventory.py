@@ -1,5 +1,6 @@
 from bson import ObjectId
 from utils.config import inventory_collection
+import datetime
 
 class Inventory:
     def __init__(self,  user_id, name, category, location, quantity, price):
@@ -17,7 +18,8 @@ class Inventory:
             "category": self.category,
             "location": self.location,
             "quantity": self.quantity,
-            "price": self.price
+            "price": self.price,
+            "timestamp": datetime.utcnow()
         }
         result = inventory_collection.insert_one(user_inv_data)
         return str(result.inserted_id)
@@ -41,6 +43,16 @@ class Inventory:
         return str(result.inserted_id)
 
     @staticmethod
+    def updated_quantities(item_id, decrement, inventory_collection):
+        result = inventory_collection.update_one(
+            {"_id": ObjectId(item_id)},
+            {"$inc": {"quantity": -decrement}}
+        )
+        return result.modified_count
+
+    @staticmethod
     def delete_item(item_id, inventory_collection):
-        result = inventory_collection.delete_one({"_id": ObjectId(item_id)})
-        return result.deleted_count
+        result = inventory_collection.delete(
+            {"_id": ObjectId(item_id)}
+        )
+        return result.modified_count

@@ -131,13 +131,25 @@ def add_inventory(user_id):
         return jsonify({"error": str(e)}), 500
 
 
-@auth_routes.route('/inventory/delete/<item_id>', methods=['DELETE'])
-def delete_inventory(item_id):
+@auth_routes.route('/inventory/delete/<item_id>/<decrement>', methods=['PATCH'])
+def update_quantity(item_id, decrement):
     try:
-        deleted_count = Inventory.delete_item(item_id, inventory_collection)
-        if deleted_count:
-            return jsonify({"message": "Item deleted successfully", "deleted_count": deleted_count}), 200
+        modified_count = Inventory.updated_quantities(item_id, inventory_collection, int(decrement))
+        if modified_count:
+            return jsonify({"message": "Item updated successfully", "modified_count": modified_count}), 200
         else:
             return jsonify({"error": "Item not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@auth_routes.route('/inventory/delete/<item_id>', methods=['Delete'])
+def delete_inventory(item_id):
+    try:
+        modified_count = Inventory.delete_item(item_id, inventory_collection)
+        if modified_count:
+            return jsonify({"message": "Item updated successfully", "modified_count": modified_count}), 200
+        else:
+            return jsonify({"error": "Item not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
