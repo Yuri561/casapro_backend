@@ -74,7 +74,34 @@ def login():
         logging.error(f"Error in login route: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
+# show inventory
+@auth_routes.route("/inventory", methods=["POST"])
+def inventory():
+    try:
+        data = request.json
+        user_id = data.get("user_id")
+        user_inventory = list(inventory_collection.find({"user_id": user_id}))
 
+        # ✅ Convert ObjectId to string
+        for item in user_inventory:
+            item["_id"] = str(item["_id"])
+
+        if user_inventory:
+            return jsonify({
+                "message": "Inventory successfully loaded",
+                "user_inventory": user_inventory
+            }), 200
+        else:
+            return jsonify({"error": "No inventory found for this user"}), 404
+
+    except Exception as e:
+        logging.error(f"Error in inventory route: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+
+
+# update an item
 @auth_routes.route('/inventory/<item_id>', methods=['PUT'])
 def update_inventory(item_id):
     data = request.get_json()
