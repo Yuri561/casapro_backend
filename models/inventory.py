@@ -16,7 +16,7 @@ class Inventory:
             "user_id": self.user_id,
             "name": self.name,
             "category": self.category,
-            "location": self.location,
+            "location": self.location or "",
             "quantity": self.quantity,
             "price": self.price,
             "timestamp": datetime.utcnow()
