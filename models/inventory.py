@@ -19,7 +19,7 @@ class Inventory:
             "location": self.location or "",
             "quantity": self.quantity,
             "price": self.price,
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now()
         }
         result = inventory_collection.insert_one(user_inv_data)
         return str(result.inserted_id)
