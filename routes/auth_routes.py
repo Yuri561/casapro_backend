@@ -74,6 +74,22 @@ def login():
         logging.error(f"Error in login route: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
+
+#inventory history route
+@auth_routes.route('/inventory/history/<user_id>', methods=['GET'])
+def get_inventory_history(user_id):
+    try:
+        # Fetch all history entries for this user
+        history = list(inventory_history_collection.find({"user_id": user_id}))
+        # Convert ObjectId and datetime to strings
+        for entry in history:
+            entry["_id"] = str(entry["_id"])
+            entry["timestamp"] = entry["timestamp"].isoformat()
+        return jsonify({"history": history}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # show inventory
 @auth_routes.route("/inventory", methods=["POST"])
 def inventory():
@@ -122,7 +138,12 @@ def update_inventory(item_id):
 
     return jsonify({"error": "Item not found or no changes"}), 404
 
+
+
+#add inventory
 @auth_routes.route('/inventory/add/<user_id>', methods=['POST'])
+
+
 def add_inventory(user_id):
     data = request.get_json() or {}
     try:
@@ -150,6 +171,7 @@ def add_inventory(user_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+#update one item quantity on inventory
 @auth_routes.route('/inventory/update-quantity/<item_id>/<int:decrement>', methods=['PATCH'])
 def update_quantity(item_id, decrement):
     modified = Inventory.updated_quantities(item_id, decrement, inventory_collection)
@@ -167,6 +189,8 @@ def update_quantity(item_id, decrement):
 
     return jsonify({"error": "Item not found"}), 404
 
+
+#delete inventory
 @auth_routes.route('/inventory/delete/<item_id>', methods=['DELETE'])
 def delete_inventory(item_id):
     deleted = Inventory.delete_item(item_id, inventory_collection)
