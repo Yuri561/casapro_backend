@@ -63,7 +63,5 @@ class Inventory:
 
     @staticmethod
     def delete_item(item_id, inventory_collection):
-        result = inventory_collection.delete(
-            {"_id": ObjectId(item_id)}
-        )
-        return result.modified_count
+        result = inventory_collection.delete_one({"_id": ObjectId(item_id)})
+        return result.deleted_count
