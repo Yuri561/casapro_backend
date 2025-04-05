@@ -4,7 +4,9 @@ from flask import Blueprint, request, jsonify
 from models.user_model import User
 from models.inventory import Inventory
 from utils.config import users_collection
-from utils.config import inventory_collection, inventory_history_collection
+from utils.config import inventory_collection
+from utils.config import inventory_history_collection
+
 import logging
 from bson import ObjectId
 
