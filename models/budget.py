@@ -1,5 +1,6 @@
 #budget model
 from datetime import datetime
+from bson import ObjectId
 
 class Budget:
     def __init__(self, user_id, limit, category ):
@@ -37,3 +38,7 @@ class Budget:
         }
         result = budget_collection.insert_one(budget_doc)
         return {"inserted_id": str(result.inserted_id)}
+    @staticmethod
+    def remove_budget(inserted_id, budget_collection):
+        result = budget_collection.delete_one({"_id": ObjectId(inserted_id)})
+        return result

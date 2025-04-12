@@ -229,3 +229,21 @@ def get_budget(user_id):
         return jsonify({"error": "Internal server error"}), 500
 
 
+
+@auth_routes.route('/remove-goal/<user_id>', methods=["DELETE"])
+def remove_budget(user_id):
+    try:
+        data = request.get_json()
+        category = data.get("category")
+        if not category:
+            return jsonify({"error": "Category is required"}), 400
+        result = budget_collection.delete_one({
+            "userId": user_id,
+            "category": category
+        })
+        if result.deleted_count == 0:
+            return jsonify({"error_message": "No matching goal found"}), 404
+        return jsonify({"message": "Budget goal removed successfully"}), 200
+    except Exception as e:
+        logging.error(f"Error removing budget goal: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
