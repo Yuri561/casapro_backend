@@ -1,9 +1,11 @@
 
 
 from flask import Blueprint, request, jsonify
+
+from models.budget import Budget
 from models.user_model import User
 from models.inventory import Inventory
-from utils.config import users_collection
+from utils.config import users_collection, budget_collection
 from utils.config import inventory_collection
 from utils.config import inventory_history_collection
 
@@ -14,7 +16,6 @@ from bson import ObjectId
 auth_routes = Blueprint("auth_routes", __name__)
 
 #logging.basicConfig(filename="error.log", level=logging.ERROR)
-
 
 @auth_routes.route("/register", methods=["POST"])
 def register():
@@ -49,7 +50,6 @@ def register():
         response.headers["Access-Control-Allow-Origin"] = "*"
         return response, 500
 
-
 @auth_routes.route("/login", methods=["POST"])
 def login():
     try:
@@ -76,7 +76,6 @@ def login():
         logging.error(f"Error in login route: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
-
 #inventory history route
 @auth_routes.route('/inventory/history/<user_id>', methods=['GET'])
 def get_inventory_history(user_id):
@@ -91,7 +90,6 @@ def get_inventory_history(user_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 # show inventory
 @auth_routes.route("/inventory", methods=["POST"])
 def inventory():
@@ -100,7 +98,7 @@ def inventory():
         user_id = data.get("user_id")
         user_inventory = list(inventory_collection.find({"user_id": user_id}))
 
-        # ✅ Convert ObjectId to string
+        #Convert ObjectId to string
         for item in user_inventory:
             item["_id"] = str(item["_id"])
 
@@ -115,9 +113,6 @@ def inventory():
     except Exception as e:
         logging.error(f"Error in inventory route: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
-
-
-
 
 # update an item
 @auth_routes.route('/inventory/<item_id>', methods=['PUT'])
@@ -140,11 +135,8 @@ def update_inventory(item_id):
 
     return jsonify({"error": "Item not found or no changes"}), 404
 
-
-
 #add inventory
 @auth_routes.route('/inventory/add/<user_id>', methods=['POST'])
-
 
 def add_inventory(user_id):
     data = request.get_json() or {}
@@ -167,13 +159,13 @@ def add_inventory(user_id):
             history_collection=inventory_history_collection
         )
 
-        return jsonify({"message": "Item added successfully", "item_id": inserted_id}), 201
+        return jsonify({"message": "Item added successfully", "item_id": str(inserted_id)}), 201
     except KeyError:
         return jsonify({"error": "Missing fields"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-#update one item quantity on inventory
+#update one
 @auth_routes.route('/inventory/update-quantity/<item_id>/<int:decrement>', methods=['PATCH'])
 def update_quantity(item_id, decrement):
     modified = Inventory.updated_quantities(item_id, decrement, inventory_collection)
@@ -191,7 +183,6 @@ def update_quantity(item_id, decrement):
 
     return jsonify({"error": "Item not found"}), 404
 
-
 #delete inventory
 @auth_routes.route('/inventory/delete/<item_id>', methods=['DELETE'])
 def delete_inventory(item_id):
@@ -199,3 +190,42 @@ def delete_inventory(item_id):
     if deleted:
         return jsonify({"message": "Item deleted successfully", "deleted_count": deleted}), 200
     return jsonify({"error": "Item not found"}), 404
+
+@auth_routes.route('/budget-goal/add/<user_id>', methods=["POST"])
+def add_budget(user_id):
+    data = request.get_json()
+    try:
+        budget_instance = Budget(
+            user_id=user_id,
+            limit=data["limit"],
+            category=data["category"]
+        )
+
+        result = budget_instance.add_budget(data, budget_collection)
+
+        if "error" in result: #checking for duplicate since model returns dict with error key
+            return jsonify(result), 409
+        return jsonify({"message": "Budget goal successfully created", **result}), 201
+
+    except KeyError:
+        return jsonify({"error": "Missing required budget data"}), 400
+    except Exception as err:
+        return jsonify({"error": f"Cannot add budget goal: {str(err)}"}), 500
+
+
+@auth_routes.route('/budget-goal/<user_id>', methods=["GET"])
+def get_budget(user_id):
+    try:
+        user_budget = list(budget_collection.find({"user_id": user_id}))
+        for doc in user_budget:
+            doc["_id"] = str(doc["_id"])
+        if user_budget:
+            return jsonify({"message": "budget goal successfully loaded",
+                            "user_budget":user_budget}), 200
+        else:
+            return jsonify({"error_message": "no budget found for this user"}), 400
+    except Exception as e:
+        logging.error(f"Error in inventory route: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
