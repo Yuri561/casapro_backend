@@ -220,8 +220,7 @@ def get_budget(user_id):
         for doc in user_budget:
             doc["_id"] = str(doc["_id"])
         if user_budget:
-            return jsonify({"message": "budget goal successfully loaded",
-                            "user_budget":user_budget}), 200
+            return jsonify(user_budget), 200
         else:
             return jsonify({"error_message": "no budget found for this user"}), 400
     except Exception as e:
