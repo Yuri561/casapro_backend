@@ -238,7 +238,7 @@ def remove_budget(user_id):
         if not category:
             return jsonify({"error": "Category is required"}), 400
         result = budget_collection.delete_one({
-            "userId": user_id,
+            "user_id": user_id,
             "category": category
         })
         if result.deleted_count == 0:
