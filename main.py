@@ -17,5 +17,5 @@ def home():
     return "Casa Pro Backend is running!"
 
 if __name__ == "__main__":
-    print("db is currently online")
+
     app.run(host="0.0.0.0", port=5000)
