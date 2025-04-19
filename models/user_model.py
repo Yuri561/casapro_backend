@@ -45,6 +45,6 @@ class User:
                 TOKEN_KEY,
                 algorithm='HS256'
 
-            ).decode("utf-8")
+            )
         except Exception as e:
             return str(e)
