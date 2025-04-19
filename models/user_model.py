@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
-from main import app
+from utils.config import TOKEN_KEY
 
 
 class User:
@@ -42,7 +42,7 @@ class User:
             }
             return jwt.encode(
                 payload,
-                app.config.get('TOKEN_KEY'),
+                TOKEN_KEY,
                 algorithm='HS256'
 
             ).decode("utf-8")

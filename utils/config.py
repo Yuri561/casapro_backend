@@ -1,7 +1,6 @@
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
-import secrets
 load_dotenv()
 # MongoDB URI (Replace with the correct connection string)
 MONGO_URI = os.getenv(
@@ -20,3 +19,7 @@ inventory_collection = db["inventory"]
 inventory_history_collection = db["inventory_history"]
 budget_collection = db["budget_goal"]
 
+
+load_dotenv()
+
+TOKEN_KEY = os.getenv("TOKEN_KEY")
