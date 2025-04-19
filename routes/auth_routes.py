@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify
 from models.budget import Budget
 from models.user_model import User
 from models.inventory import Inventory
+from utils.auth import token_required
 from utils.config import users_collection, budget_collection
 from utils.config import inventory_collection
 from utils.config import inventory_history_collection
@@ -62,11 +63,13 @@ def login():
 
         # Verify user credentials
         if user_data and User.verify_password(user_data["password"], password):
+            token = User.encode_auth_token(user_data["_id"])
             return jsonify({
                 "message": "Login successful",
+                "token": token,
                 "user": {
                     "username": user_data["username"],
-                    "user_id": user_data["username"]
+                    "user_id": str(user_data["_id"])
                     }
             }), 200
         else:
@@ -78,10 +81,11 @@ def login():
 
 #inventory history route
 @auth_routes.route('/inventory/history/<user_id>', methods=['GET'])
-def get_inventory_history(user_id):
+@token_required
+def get_inventory_history(current_user_id):
     try:
         # Fetch all history entries for this user
-        history = list(inventory_history_collection.find({"user_id": user_id}))
+        history = list(inventory_history_collection.find({"user_id": current_user_id}))
         # Convert ObjectId and datetime to strings
         for entry in history:
             entry["_id"] = str(entry["_id"])
@@ -92,10 +96,11 @@ def get_inventory_history(user_id):
 
 # show inventory
 @auth_routes.route("/inventory", methods=["POST"])
-def inventory():
+@token_required
+def inventory(current_user_id):
     try:
         data = request.json
-        user_id = data.get("user_id")
+        user_id = current_user_id
         user_inventory = list(inventory_collection.find({"user_id": user_id}))
 
         #Convert ObjectId to string
@@ -115,8 +120,10 @@ def inventory():
         return jsonify({"error": "Internal server error"}), 500
 
 # update an item
+
 @auth_routes.route('/inventory/<item_id>', methods=['PUT'])
-def update_inventory(item_id):
+@token_required
+def update_inventory(item_id, current_user_id):
     data = request.get_json()
     if not data:
         return jsonify({"error": "No data provided"}), 400
@@ -128,7 +135,7 @@ def update_inventory(item_id):
             category=data.get("category"),
             change_type="updated",
             amount=0,
-            user_id=data.get("user_id"),
+            user_id=current_user_id,
             history_collection=inventory_history_collection
         )
         return jsonify({"message": "Inventory updated successfully"}), 200
@@ -136,13 +143,13 @@ def update_inventory(item_id):
     return jsonify({"error": "Item not found or no changes"}), 404
 
 #add inventory
-@auth_routes.route('/inventory/add/<user_id>', methods=['POST'])
-
-def add_inventory(user_id):
+@auth_routes.route('/inventory/add', methods=['POST'])
+@token_required
+def add_inventory(current_user_id):
     data = request.get_json() or {}
     try:
         new_item = Inventory(
-            user_id=user_id,
+            user_id=current_user_id,
             name=data["name"],
             category=data["category"],
             quantity=int(data["quantity"]),
@@ -155,7 +162,7 @@ def add_inventory(user_id):
             category=new_item.category,
             change_type="added",
             amount=new_item.quantity,
-            user_id=user_id,
+            user_id=current_user_id,
             history_collection=inventory_history_collection
         )
 
@@ -167,7 +174,11 @@ def add_inventory(user_id):
 
 #update one
 @auth_routes.route('/inventory/update-quantity/<item_id>/<int:decrement>', methods=['PATCH'])
-def update_quantity(item_id, decrement):
+@token_required
+def update_quantity(current_user_id, item_id, decrement):
+    doc = inventory_collection.find_one({"_id": ObjectId(item_id)})
+    if not doc or doc["user_id"] != current_user_id:
+        return jsonify({"error": "Unauthorized or item not found"}), 403
     modified = Inventory.updated_quantities(item_id, decrement, inventory_collection)
     if modified:
         # Fetch the item to get its category & user_id
@@ -176,7 +187,7 @@ def update_quantity(item_id, decrement):
             category=doc["category"],
             change_type="removed",
             amount=decrement,
-            user_id=doc["user_id"],
+            user_id=current_user_id,
             history_collection=inventory_history_collection
         )
         return jsonify({"message": "Quantity updated", "modified_count": modified}), 200
@@ -185,7 +196,11 @@ def update_quantity(item_id, decrement):
 
 #delete inventory
 @auth_routes.route('/inventory/delete/<item_id>', methods=['DELETE'])
-def delete_inventory(item_id):
+@token_required
+def delete_inventory(current_user_id, item_id):
+    doc = inventory_collection.find_one({"_id": ObjectId(item_id)})
+    if not doc or doc["user_id"] !=current_user_id:
+        return jsonify({"error": "Unauthorized or item not found"}), 403
     deleted = Inventory.delete_item(item_id, inventory_collection)
     if deleted:
         return jsonify({"message": "Item deleted successfully", "deleted_count": deleted}), 200
@@ -213,10 +228,11 @@ def add_budget(user_id):
         return jsonify({"error": f"Cannot add budget goal: {str(err)}"}), 500
 
 
-@auth_routes.route('/budget-goal/<user_id>', methods=["GET"])
-def get_budget(user_id):
+@auth_routes.route('/budget-goal', methods=["GET"])
+@token_required
+def get_budget(current_user_id):
     try:
-        user_budget = list(budget_collection.find({"user_id": user_id}))
+        user_budget = list(budget_collection.find({"user_id": current_user_id}))
         for doc in user_budget:
             doc["_id"] = str(doc["_id"])
         if user_budget:
@@ -229,15 +245,16 @@ def get_budget(user_id):
 
 
 
-@auth_routes.route('/remove-goal/<user_id>', methods=["DELETE"])
-def remove_budget(user_id):
+@auth_routes.route('/remove-goal/', methods=["DELETE"])
+@token_required
+def remove_budget(current_user_id):
     try:
         data = request.get_json()
         category = data.get("category")
         if not category:
             return jsonify({"error": "Category is required"}), 400
         result = budget_collection.delete_one({
-            "user_id": user_id,
+            "user_id": current_user_id,
             "category": category
         })
         if result.deleted_count == 0:

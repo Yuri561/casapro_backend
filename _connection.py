@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
+import secrets
 
 load_dotenv()
 MONGO_URI = os.getenv("MONGODB_URI")
@@ -16,3 +17,4 @@ try:
 
 except Exception as e:
     print(f"Error: {e}")
+

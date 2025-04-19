@@ -1,4 +1,8 @@
+from datetime import datetime, timedelta, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
+import jwt
+from main import app
+
 
 class User:
     def __init__(self, username, password, email):
@@ -25,3 +29,22 @@ class User:
     @staticmethod
     def find_by_username(username, users_collection):
         return users_collection.find_one({"username": username})
+
+
+    #jwt token being created
+    @staticmethod
+    def encode_auth_token(user_id):
+        try:
+            payload = {
+                'exp': datetime.now(timezone.utc) + timedelta(days=1),
+                'iat': datetime.now(timezone.utc),
+                'sub': user_id
+            }
+            return jwt.encode(
+                payload,
+                app.config.get('TOKEN_KEY'),
+                algorithm='HS256'
+
+            )
+        except Exception as e:
+            return str(e)
