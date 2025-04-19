@@ -38,7 +38,7 @@ class User:
             payload = {
                 'exp': datetime.now(timezone.utc) + timedelta(days=1),
                 'iat': datetime.now(timezone.utc),
-                'sub': user_id
+                'sub': str(user_id)
             }
             return jwt.encode(
                 payload,
