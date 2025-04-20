@@ -73,7 +73,7 @@ def login():
                     "user_id": str(user_data["_id"])
                     }
             }))
-            resp.set_cookie("access_token", token, max_age=3600, httponly=True, samesite="Strict")
+            resp.set_cookie("access_token", token, max_age=3600, httponly=True, samesite=None, secure=True)
             return resp, 200
         else:
             return jsonify({"error": "Invalid credentials"}), 401
