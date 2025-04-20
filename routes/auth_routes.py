@@ -2,6 +2,7 @@
 
 from flask import Blueprint, request, jsonify, make_response
 
+
 from models.budget import Budget
 from models.user_model import User
 from models.inventory import Inventory
@@ -9,7 +10,7 @@ from utils.auth import token_required
 from utils.config import users_collection, budget_collection
 from utils.config import inventory_collection
 from utils.config import inventory_history_collection
-
+from utils.config import  TOKEN_KEY
 import logging
 from bson import ObjectId
 
@@ -49,6 +50,8 @@ def register():
         response.headers["Access-Control-Allow-Origin"] = "*"
         return response, 500
 
+
+
 @auth_routes.route("/login", methods=["POST"])
 def login():
     try:
@@ -56,25 +59,30 @@ def login():
         username = data.get("username")
         password = data.get("password")
 
-        # Find user in database
         user_data = User.find_by_username(username, users_collection)
 
-        # Verify user credentials
         if user_data and User.verify_password(user_data["password"], password):
             token = User.encode_auth_token(user_data["_id"])
             if not token:
-                 return jsonify({"error": "Token generation failed"}), 500
+                return jsonify({"error": "Token generation failed"}), 500
 
-            resp = make_response(jsonify({
+            response = jsonify({
                 "message": "Login successful",
                 "token": token,
                 "user": {
                     "username": user_data["username"],
                     "user_id": str(user_data["_id"])
-                    }
-            }))
-            resp.set_cookie("access_token", token, max_age=3600, httponly=True, samesite=None, secure=True)
-            return resp, 200
+                }
+            })
+            response.set_cookie(
+                "access_token",
+                token,
+                max_age=3600,
+                httponly=True,
+                samesite="None",
+                secure=True
+            )
+            return response
         else:
             return jsonify({"error": "Invalid credentials"}), 401
 
