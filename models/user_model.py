@@ -33,7 +33,6 @@ class User:
 
     #jwt token being created
     @staticmethod
-    @staticmethod
     def encode_auth_token(user_id):
         try:
             payload = {
@@ -44,8 +43,8 @@ class User:
             token = jwt.encode(payload, TOKEN_KEY, algorithm='HS256')
 
             if isinstance(token, bytes):
-                return token.decode('utf-8')
-            return token
+                return token
+
 
         except Exception as e:
             print("Token generation error:", str(e))
