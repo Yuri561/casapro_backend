@@ -40,12 +40,9 @@ class User:
                 'iat': datetime.now(timezone.utc),
                 'sub': str(user_id)
             }
-            token = jwt.encode(payload, TOKEN_KEY, algorithm='HS256')
-
-
+            return jwt.encode(payload, TOKEN_KEY, algorithm='HS256')
 
         except Exception as e:
             print("Token generation error:", str(e))
             return None
 
-        return token
