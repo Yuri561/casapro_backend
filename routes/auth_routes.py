@@ -62,6 +62,9 @@ def login():
         # Verify user credentials
         if user_data and User.verify_password(user_data["password"], password):
             token = User.encode_auth_token(user_data["_id"])
+            if not token:
+                 return jsonify({"error": "Token generation failed"}), 500
+
             resp = make_response(jsonify({
                 "message": "Login successful",
                 "token": token,
