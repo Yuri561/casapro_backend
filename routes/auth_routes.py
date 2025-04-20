@@ -97,11 +97,24 @@ def logout():
     resp.delete_cookie("access_token")
     return resp
 
+from bson import ObjectId
 
 @auth_routes.route("/verify", methods=["GET"])
 @token_required
 def verify(current_user_id):
-    return jsonify({"message": "Token valid", "user_id": current_user_id}), 200
+    try:
+        user = users_collection.find_one({"_id": ObjectId(current_user_id)})
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        return jsonify({
+            "message": "Token valid",
+            "user_id": str(user["_id"]),
+            "username": user["username"]
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": "Internal server error"}), 500
 
 #inventory history route
 @auth_routes.route('/inventory/history', methods=['GET'])
