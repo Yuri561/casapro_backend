@@ -62,7 +62,7 @@ def login():
         user_data = User.find_by_username(username, users_collection)
 
         if user_data and User.verify_password(user_data["password"], password):
-            token = User.encode_auth_token(user_data["_id"])
+            token = User.encode_auth_token(user_data["username"])
             if not token:
                 return jsonify({"error": "Token generation failed"}), 500
 
@@ -71,7 +71,7 @@ def login():
                 "token": token,
                 "user": {
                     "username": user_data["username"],
-                    "user_id": str(user_data["_id"])
+                    "user_id": str(user_data["username"])
                 }
             })
             response.set_cookie(
@@ -103,13 +103,13 @@ from bson import ObjectId
 @token_required
 def verify(current_user_id):
     try:
-        user = users_collection.find_one({"_id": ObjectId(current_user_id)})
+        user = users_collection.find_one({"username": current_user_id})
         if not user:
             return jsonify({"error": "User not found"}), 404
 
         return jsonify({
             "message": "Token valid",
-            "user_id": str(user["_id"]),
+            "user_id": str(user["username"]),
             "username": user["username"]
         }), 200
 
@@ -136,21 +136,18 @@ def get_inventory_history(current_user_id):
 @token_required
 def inventory(current_user_id):
     try:
-        data = request.json
-        user_id = current_user_id
-        user_inventory = list(inventory_collection.find({"user_id": user_id}))
+        print("Fetching inventory for user:", current_user_id)
 
-        #Convert ObjectId to string
+        user_inventory = list(inventory_collection.find({"user_id": current_user_id}))
+        print(f"Found {len(user_inventory)} items")
+
         for item in user_inventory:
             item["_id"] = str(item["_id"])
 
-        if user_inventory:
-            return jsonify({
-                "message": "Inventory successfully loaded",
-                "user_inventory": user_inventory
-            }), 200
-        else:
-            return jsonify({"error": "No inventory found for this user"}), 404
+        return jsonify({
+            "message": "Inventory successfully loaded",
+            "user_inventory": user_inventory
+        }), 200
 
     except Exception as e:
         logging.error(f"Error in inventory route: {str(e)}")
@@ -186,7 +183,7 @@ def add_inventory(current_user_id):
     data = request.get_json() or {}
     try:
         new_item = Inventory(
-            user_id=current_user_id,
+            user_id=str(current_user_id),
             name=data["name"],
             category=data["category"],
             quantity=int(data["quantity"]),
