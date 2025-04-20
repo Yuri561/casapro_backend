@@ -1,6 +1,6 @@
 
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, make_response
 
 from models.budget import Budget
 from models.user_model import User
@@ -15,8 +15,6 @@ from bson import ObjectId
 
 # Create Blueprint for auth routes
 auth_routes = Blueprint("auth_routes", __name__)
-
-#logging.basicConfig(filename="error.log", level=logging.ERROR)
 
 @auth_routes.route("/register", methods=["POST"])
 def register():
@@ -64,14 +62,16 @@ def login():
         # Verify user credentials
         if user_data and User.verify_password(user_data["password"], password):
             token = User.encode_auth_token(user_data["_id"])
-            return jsonify({
+            resp = make_response(jsonify({
                 "message": "Login successful",
                 "token": token,
                 "user": {
                     "username": user_data["username"],
                     "user_id": str(user_data["_id"])
                     }
-            }), 200
+            }))
+            resp.set_cookie("access_token", token, max_age=3600, httponly=True, samesite="Strict")
+            return resp, 200
         else:
             return jsonify({"error": "Invalid credentials"}), 401
 
@@ -79,8 +79,21 @@ def login():
         logging.error(f"Error in login route: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
+@auth_routes.route("/logout", methods=["POST"] )
+@token_required
+def logout():
+    resp = make_response({"message": "Successfully logged out"})
+    resp.delete_cookie("access_token")
+    return resp
+
+
+@auth_routes.route("/verify", methods=["GET"])
+@token_required
+def verify(current_user_id):
+    return jsonify({"message": "Token valid", "user_id": current_user_id}), 200
+
 #inventory history route
-@auth_routes.route('/inventory/history/<user_id>', methods=['GET'])
+@auth_routes.route('/inventory/history', methods=['GET'])
 @token_required
 def get_inventory_history(current_user_id):
     try:
@@ -206,12 +219,13 @@ def delete_inventory(current_user_id, item_id):
         return jsonify({"message": "Item deleted successfully", "deleted_count": deleted}), 200
     return jsonify({"error": "Item not found"}), 404
 
-@auth_routes.route('/budget-goal/add/<user_id>', methods=["POST"])
-def add_budget(user_id):
+@auth_routes.route('/budget-goal/add', methods=["POST"])
+@token_required
+def add_budget(current_user_id):
     data = request.get_json()
     try:
         budget_instance = Budget(
-            user_id=user_id,
+            user_id=current_user_id,
             limit=data["limit"],
             category=data["category"]
         )
@@ -242,6 +256,7 @@ def get_budget(current_user_id):
     except Exception as e:
         logging.error(f"Error in inventory route: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
+
 
 
 
