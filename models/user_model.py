@@ -42,10 +42,10 @@ class User:
             }
             token = jwt.encode(payload, TOKEN_KEY, algorithm='HS256')
 
-            if isinstance(token, bytes):
-                return token
 
 
         except Exception as e:
             print("Token generation error:", str(e))
             return None
+
+        return token
