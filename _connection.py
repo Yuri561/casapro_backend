@@ -21,8 +21,10 @@ except Exception as e:
 from bson import ObjectId
 from utils.config import inventory_collection
 
+old_object_id = ObjectId("661fda7811cb8949c0233d99")
+
 result = inventory_collection.update_many(
-    {"user_id": "yuri"},
+    {"user_id": old_object_id},
     {"$set": {"user_id": "yuri"}}
 )
 

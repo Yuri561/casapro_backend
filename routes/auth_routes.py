@@ -90,12 +90,16 @@ def login():
         logging.error(f"Error in login route: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
-@auth_routes.route("/logout", methods=["POST"] )
+@auth_routes.route("/logout", methods=["POST"])
 @token_required
-def logout():
-    resp = make_response({"message": "Successfully logged out"})
-    resp.delete_cookie("access_token")
-    return resp
+def logout(current_user_id):
+    try:
+        resp = make_response({"message": "Successfully logged out"})
+        resp.delete_cookie("access_token")
+        return resp, 200
+    except Exception as e:
+        logging.error(f"Logout error: {e}")
+        return jsonify({"error": "Logout failed"}), 500
 
 from bson import ObjectId
 
@@ -108,6 +112,7 @@ def verify(current_user_id):
             return jsonify({"error": "User not found"}), 404
 
         return jsonify({
+            "token": token,
             "message": "Token valid",
             "user_id": str(user["username"]),
             "username": user["username"]
