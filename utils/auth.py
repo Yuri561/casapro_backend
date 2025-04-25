@@ -8,10 +8,10 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = request.cookies.get("access_token")
-
+        if 'Authorization' not in request.headers:
+            token = request.headers["Authorization"].split(" ")[1]
         if not token:
-            return jsonify({"error": "Token is missing"}), 400
-
+            return jsonify({"error": "Token is missing"}),
         try:
             data = jwt.decode(token, TOKEN_KEY, algorithms=["HS256"])
             current_user_id = data["sub"]
@@ -19,7 +19,6 @@ def token_required(f):
             return jsonify({"error": "Token has expired"}), 401
         except jwt.InvalidTokenError:
             return jsonify({"error": "Invalid token"}), 401
-
         return f(current_user_id, *args, **kwargs)
 
     return decorated
