@@ -1,20 +1,21 @@
 from flask import request, jsonify
 import jwt
 from utils.config import TOKEN_KEY
+from functools import wraps
 
 def token_required(f):
-    from functools import wraps
 
     @wraps(f)
     def decorated(*args, **kwargs):
         token = request.cookies.get("access_token")
-        if 'Authorization' not in request.headers:
-            token = request.headers["Authorization"].split(" ")[1]
+        if 'access_token' in request.cookies:
+            token = request.cookies.get('access_token')
         if not token:
             return jsonify({"error": "Token is missing"}),
         try:
             data = jwt.decode(token, TOKEN_KEY, algorithms=["HS256"])
-            current_user_id = data["sub"]
+            print("[DEBUG] JWT Payload:", data)
+            current_user_id = data.get("sub")
         except jwt.ExpiredSignatureError:
             return jsonify({"error": "Token has expired"}), 401
         except jwt.InvalidTokenError:

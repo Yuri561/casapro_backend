@@ -101,24 +101,23 @@ def logout(current_user_id):
         logging.error(f"Logout error: {e}")
         return jsonify({"error": "Logout failed"}), 500
 
-from bson import ObjectId
 
 @auth_routes.route("/verify", methods=["GET"])
 @token_required
 def verify(current_user_id):
     try:
-        user = users_collection.find_one({"username": current_user_id})
+        user = users_collection.find_one({"user_id": current_user_id})
         if not user:
             return jsonify({"error": "User not found"}), 404
 
         return jsonify({
-            "token": token,
             "message": "Token valid",
-            "user_id": str(user["username"]),
+            "user_id": str(user["user_id"]),
             "username": user["username"]
         }), 200
 
     except Exception as e:
+        logging.error(f"error fetching data {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 #inventory history route
