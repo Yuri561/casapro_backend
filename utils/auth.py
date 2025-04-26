@@ -14,7 +14,7 @@ def token_required(f):
             return jsonify({"error": "Token is missing"}),
         try:
             data = jwt.decode(token, TOKEN_KEY, algorithms=["HS256"])
-            print("[DEBUG] JWT Payload:", data)
+            # print("[DEBUG] JWT Payload:", data)
             current_user_id = data.get("sub")
         except jwt.ExpiredSignatureError:
             return jsonify({"error": "Token has expired"}), 401

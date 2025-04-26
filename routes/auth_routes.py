@@ -125,9 +125,7 @@ def verify(current_user_id):
 @token_required
 def get_inventory_history(current_user_id):
     try:
-        # Fetch all history entries for this user
-        history = list(inventory_history_collection.find({"user_id": current_user_id}))
-        # Convert ObjectId and datetime to strings
+        history = list(inventory_history_collection.find({"user_id": str(current_user_id)}))
         for entry in history:
             entry["_id"] = str(entry["_id"])
             entry["timestamp"] = entry["timestamp"].isoformat()
@@ -141,18 +139,14 @@ def get_inventory_history(current_user_id):
 def inventory(current_user_id):
     try:
         print("Fetching inventory for user:", current_user_id)
-
-        user_inventory = list(inventory_collection.find({"user_id": current_user_id}))
+        user_inventory = list(inventory_collection.find({"user_id": str(current_user_id)}))
         print(f"Found {len(user_inventory)} items")
-
         for item in user_inventory:
             item["_id"] = str(item["_id"])
-
         return jsonify({
             "message": "Inventory successfully loaded",
             "user_inventory": user_inventory
         }), 200
-
     except Exception as e:
         logging.error(f"Error in inventory route: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
