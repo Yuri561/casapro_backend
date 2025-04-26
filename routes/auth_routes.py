@@ -265,7 +265,7 @@ def add_budget(current_user_id):
 @token_required
 def get_budget(current_user_id):
     try:
-        user_budget = list(budget_collection.find({"user_id": current_user_id}))
+        user_budget = list(budget_collection.find({"user_id": str(current_user_id)}))
         for doc in user_budget:
             doc["_id"] = str(doc["_id"])
         if user_budget:
