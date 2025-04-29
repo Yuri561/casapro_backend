@@ -11,7 +11,7 @@ def token_required(f):
         if 'access_token' in request.cookies:
             token = request.cookies.get('access_token')
         if not token:
-            return jsonify({"error": "Token is missing"}),
+            return jsonify({"error": "Token is missing"}), 401
         try:
             data = jwt.decode(token, TOKEN_KEY, algorithms=["HS256"])
             # print("[DEBUG] JWT Payload:", data)
